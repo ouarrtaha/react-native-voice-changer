@@ -1,8 +1,12 @@
 package com.reactlibrary;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Gravity;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.facebook.react.bridge.Arguments;
@@ -14,8 +18,13 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.reactlibrary.basseffect.IDBMediaListener;
 import com.reactlibrary.dataMng.JsonParsingUtils;
 import com.reactlibrary.object.EffectObject;
+import com.reactlibrary.task.DBTask;
+import com.reactlibrary.task.IDBCallback;
+import com.reactlibrary.task.IDBTaskListener;
+import com.reactlibrary.utils.ApplicationUtils;
 import com.reactlibrary.utils.DBLog;
 import com.reactlibrary.utils.StringUtils;
 import com.un4seen.bass.BASS;
@@ -26,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.reactlibrary.constants.IVoiceChangerConstants.FORMAT_NAME_VOICE;
+import static com.reactlibrary.constants.IVoiceChangerConstants.NAME_FOLDER_RECORD;
 import static com.un4seen.bass.BASS.BASS_CONFIG_FLOAT;
 
 public class VoiceChangerModule extends ReactContextBaseJavaModule {
@@ -37,6 +48,8 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
     private DBMediaPlayer mDBMedia;
     private boolean isInit;
     private Integer playingIndex;
+    private File outputDir;
+    private String mNameExportVoice;
 
     public VoiceChangerModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -45,6 +58,8 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
         this.effectObjects = new ArrayList<>();
         this.mPathAudio = null;
         this.playingIndex = null;
+        this.outputDir = null;
+        this.onInitAudioDevice();
     }
 
     @Override
@@ -54,17 +69,6 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
 
     private static final String DURATION_SHORT_KEY = "SHORT";
     private static final String DURATION_LONG_KEY = "LONG";
-
-    @ReactMethod
-    public void show(String message, int duration) {
-        Toast.makeText(getReactApplicationContext(), message, duration).show();
-    }
-
-    private void showToast(String message) {
-        Toast toast = Toast.makeText(reactContext, message, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.BOTTOM, 0, 0);
-        toast.show();
-    }
 
     @Override
     public Map<String, Object> getConstants() {
@@ -77,6 +81,11 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void insertEffect(String effect) {
         this.effectObjects.add(JsonParsingUtils.jsonToEffectObject(effect));
+    }
+
+    @ReactMethod
+    public void show(String message, int duration) {
+        Toast.makeText(getReactApplicationContext(), message, duration).show();
     }
 
     @ReactMethod
@@ -93,6 +102,21 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
             params.putInt("index", idx);
             sendEvent(reactContext, "idxMediaPlaying", params);
         }
+    }
+
+    @ReactMethod
+    public void saveEffect(int effectIndex, Promise promise) {
+        onSaveEffect(this.effectObjects.get(effectIndex), promise);
+    }
+
+    @ReactMethod
+    public void createOutputDir() {
+        this.outputDir = this.getDir();
+    }
+
+    @ReactMethod
+    public void createDBMedia() {
+        this.onCreateDBMedia();
     }
 
     @ReactMethod
@@ -156,11 +180,6 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
-        reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit(eventName, params);
-    }
 
     private void onInitAudioDevice() {
         if (!isInit) {
@@ -184,6 +203,158 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
         }
     }
 
+    public void onSaveEffect(final EffectObject mEffectObject, final Promise promise) {
+        if (mDBMedia != null) {
+            onResetState();
+        }
+
+        mNameExportVoice = String.format(FORMAT_NAME_VOICE, String.valueOf(System.currentTimeMillis() / 1000));
+        showDialogEnterName(new IDBCallback() {
+            @Override
+            public void onAction() {
+                if (mDBMedia != null) {
+                    startSaveEffect(mEffectObject, new IDBCallback() {
+                        @Override
+                        public void onAction() {
+
+                            final File mOutPutFile = new File(outputDir, mNameExportVoice);
+                            if (mOutPutFile.exists() && mOutPutFile.isFile()) {
+                                String mInfoSave = String.format("Your voice path is %1$s", mOutPutFile.getAbsolutePath());
+                                showToast(mInfoSave);
+                                promise.resolve(mOutPutFile.getAbsolutePath());
+                            }
+                        }
+                    });
+
+                }
+            }
+        });
+    }
+
+    private void startSaveEffect(final EffectObject mEffectObject, final IDBCallback mDBCallback) {
+        final File mTempOutPutFile = new File(outputDir, mNameExportVoice);
+
+        final DBMediaPlayer mDBExportMedia = new DBMediaPlayer(mPathAudio);
+        mDBExportMedia.setPathMix(mEffectObject.getPathMix());
+        mDBExportMedia.setNeedMix(mEffectObject.isMix());
+
+        DBTask mDBTask = new DBTask(new IDBTaskListener() {
+
+            @Override
+            public void onPreExcute() {
+                //todo progress dialog
+            }
+
+            @Override
+            public void onDoInBackground() {
+                boolean b = mDBExportMedia.initMediaToSave();
+                if (b) {
+                    mDBExportMedia.setReverse(mEffectObject.isReverse());
+                    mDBExportMedia.setAudioPitch(mEffectObject.getPitch());
+                    mDBExportMedia.setCompressor(mEffectObject.getCompressor());
+                    mDBExportMedia.setAudioRate(mEffectObject.getRate());
+                    mDBExportMedia.setAudioEQ1(mEffectObject.getEq1());
+                    mDBExportMedia.setAudioEQ2(mEffectObject.getEq2());
+                    mDBExportMedia.setAudioEQ3(mEffectObject.getEq3());
+                    mDBExportMedia.setPhaser(mEffectObject.getPhaser());
+                    mDBExportMedia.setAutoWah(mEffectObject.getAutoWah());
+                    mDBExportMedia.setAudioReverb(mEffectObject.getReverb());
+                    mDBExportMedia.setEcho4Effect(mEffectObject.getEcho4());
+                    mDBExportMedia.setAudioEcho(mEffectObject.getEcho());
+
+                    mDBExportMedia.setBiQuadFilter(mEffectObject.getFilter());
+                    mDBExportMedia.setFlangeEffect(mEffectObject.getFlange());
+                    mDBExportMedia.setChorus(mEffectObject.getChorus());
+                    mDBExportMedia.setAmplify(mEffectObject.getAmplify());
+                    mDBExportMedia.setDistort(mEffectObject.getDistort());
+                    mDBExportMedia.setRotate(mEffectObject.getRotate());
+
+                    mDBExportMedia.saveToFile(mTempOutPutFile.getAbsolutePath());
+                    mDBExportMedia.releaseAudio();
+                }
+            }
+
+            @Override
+            public void onPostExcute() {
+                //todo dissmiss progress dialog
+                if (mDBCallback != null) {
+                    mDBCallback.onAction();
+                }
+            }
+
+        });
+        mDBTask.execute();
+    }
+
+    private void showDialogEnterName(final IDBCallback mDCallback) {
+        final EditText mEdName = new EditText(reactContext);
+        mEdName.setSingleLine(true);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getCurrentActivity()).setTitle("Enter title").setView(mEdName)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ApplicationUtils.hiddenVirtualKeyboard(reactContext, mEdName);
+                        String mNewName = mEdName.getText().toString();
+                        if (!StringUtils.isEmptyString(mNewName)) {
+                            if (StringUtils.isContainsSpecialCharacter(mNewName)) {
+                                showToast("Your name can only contain the alphabet or number characters");
+                                return;
+                            }
+                            mNameExportVoice = mNewName + ".wav";
+                        }
+                        if (mDCallback != null) {
+                            mDCallback.onAction();
+                        }
+                    }
+                }).setNegativeButton("Skip", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (mDCallback != null) {
+                            mDCallback.onAction();
+                        }
+                    }
+                });
+        AlertDialog mDialogEnterPass = builder.create();
+        mDialogEnterPass.show();
+    }
+
+    @ReactMethod
+    private void onCreateDBMedia() {
+        if (!StringUtils.isEmptyString(mPathAudio)) {
+            mDBMedia = new DBMediaPlayer(mPathAudio);
+            mDBMedia.prepareAudio();
+            mDBMedia.setOnDBMediaListener(new IDBMediaListener() {
+                @Override
+                public void onMediaError() {
+
+                }
+
+                @Override
+                public void onMediaCompletion() {
+                    effectObjects.get(playingIndex).setPlaying(false);
+                    setPlayingIndex(null);
+                    WritableMap params = Arguments.createMap();
+                    sendEvent(reactContext, "onMediaCompletion", params);
+                }
+            });
+        } else {
+            showToast("Media file not found!");
+        }
+    }
+
+
+    private void showToast(String message) {
+        Toast toast = Toast.makeText(reactContext, message, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.BOTTOM, 0, 0);
+        toast.show();
+    }
+
+    private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
+    }
+
     public void onResetState() {
         if (effectObjects != null && effectObjects.size() > 0) {
             for (int i = 0; i < effectObjects.size(); i++) {
@@ -192,5 +363,14 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
                 }
             }
         }
+    }
+
+    private File getDir() {
+        String dirpath = Environment.getExternalStorageDirectory().getPath();
+        File dir = new File(dirpath, NAME_FOLDER_RECORD);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
     }
 }
