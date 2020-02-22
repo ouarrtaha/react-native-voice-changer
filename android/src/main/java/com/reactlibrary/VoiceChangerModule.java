@@ -17,12 +17,14 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext reactContext;
     private ArrayList<EffectObject> effectObjects;
+    private String mPathAudio;
 
     public VoiceChangerModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
 
         this.effectObjects = new ArrayList<>();
+        this.mPathAudio = null;
     }
 
     @Override
@@ -49,5 +51,11 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void insertEffect(String effect) {
         this.effectObjects.add(JsonParsingUtils.jsonToEffectObject(effect));
+    }
+
+    @ReactMethod
+    public void setPath(String path) {
+        this.mPathAudio = path;
+
     }
 }
