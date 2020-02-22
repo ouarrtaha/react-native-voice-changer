@@ -5,6 +5,7 @@ import android.os.Environment;
 
 import com.reactlibrary.constants.IVoiceChangerConstants;
 import com.reactlibrary.object.EffectObject;
+import com.reactlibrary.soundMng.SoundManager;
 import com.reactlibrary.utils.ApplicationUtils;
 import com.reactlibrary.utils.DBLog;
 import com.reactlibrary.utils.IOUtils;
@@ -29,6 +30,19 @@ public class TotalDataManager implements IVoiceChangerConstants {
 
     private TotalDataManager() {
 
+    }
+
+    public void onDestroy() {
+        if (listEffectObjects != null) {
+            listEffectObjects.clear();
+            listEffectObjects = null;
+        }
+        try {
+            SoundManager.getInstance().releaseSound();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        totalDataManager = null;
     }
 
     public ArrayList<EffectObject> getListEffectObjects() {
