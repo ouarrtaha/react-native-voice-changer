@@ -33,6 +33,11 @@ public class VoiceChangerModule extends ReactContextBaseJavaModule {
     private static final String DURATION_SHORT_KEY = "SHORT";
     private static final String DURATION_LONG_KEY = "LONG";
 
+    @ReactMethod
+    public void show(String message, int duration) {
+        Toast.makeText(getReactApplicationContext(), message, duration).show();
+    }
+
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
