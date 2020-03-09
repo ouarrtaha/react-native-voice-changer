@@ -1,7 +1,7 @@
 {
   "name": "react-native-voice-changer",
   "title": "React Native Voice Changer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TODO",
   "main": "index.js",
   "scripts": {
@@ -16,8 +16,8 @@
     "react-native"
   ],
   "author": {
-    "name": "Your Name",
-    "email": "yourname@email.com"
+    "name": "Taha ouarrak",
+    "email": "tahaouarrak@gmail.com"
   },
   "license": "MIT",
   "licenseFilename": "LICENSE",
