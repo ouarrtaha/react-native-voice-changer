@@ -9,7 +9,6 @@ const RnVoiceChanger = {
     saveEffect: effectIdx => VoiceChanger.saveEffect(effectIdx),
     createOutputDir: () => VoiceChanger.createOutputDir(),
     createDBMedia: () => VoiceChanger.createDBMedia(),
-    onCreateDBMedia: () => VoiceChanger.onCreateDBMedia(),
     playEffect: effectIndex => VoiceChanger.playEffect(effectIndex),
 };
 
