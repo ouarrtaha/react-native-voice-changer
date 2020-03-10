@@ -2,15 +2,15 @@
   "name": "react-native-voice-changer",
   "title": "React Native Voice Changer",
   "version": "1.0.1",
-  "description": "TODO",
+  "description": "React Native Un4seen Bass Wrapper",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/github_account/react-native-voice-changer.git",
-    "baseUrl": "https://github.com/github_account/react-native-voice-changer"
+    "url": "git+https://github.com/ouarrtaha/react-native-voice-changer.git",
+    "baseUrl": "https://github.com/ouarrtaha/react-native-voice-changer"
   },
   "keywords": [
     "react-native"
