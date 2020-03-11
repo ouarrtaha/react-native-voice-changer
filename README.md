@@ -1,6 +1,6 @@
 # react-native-voice-changer
 
-**react-native-voice-changer** is a wrapper of [un4seen Bass](https://www.un4seen.com/bass.html) which is a native voice processing library 
+**react-native-voice-changer** is a wrapper of [un4seen Bass](https://www.un4seen.com/bass.html) a native voice processing library 
 
 ### Demo
 
