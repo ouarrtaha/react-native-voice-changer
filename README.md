@@ -1,11 +1,18 @@
 # react-native-voice-changer
 
+**react-native-voice-changer** is a wrapper of [un4seen Bass](https://www.un4seen.com/bass.html) which is a native voice processing library 
+
+### Demo
+
+[Playstore](https://play.google.com/store/apps/details?id=com.pappillon.voice)
+
 ## Getting started
 
 `$ npm install react-native-voice-changer --save`
 
 ### Mostly automatic installation
 
+For `RN >=0.60` linking is automatic else: <br>
 `$ react-native link react-native-voice-changer`
 
 ### Android permissions
@@ -117,3 +124,9 @@ Effect object has the following properties
 | phaser: | [fDryMix, fWetMix, fFeedback, fRate, fRange, fFreq] | <strong>fDryMix:</strong> Dry (unaffected) signal mix (-2...+2). Default = 0. <br><br> <strong>fWetMix:</strong> Wet (affected) signal mix (-2...+2). Default = 0. <br><br> <strong>fFeedback:</strong> Feedback (-1...+1). Default = 0. <br><br> <strong>fRate:</strong> Rate of sweep in cycles per second (0<...<10). Default = 0. <br><br> <strong>fRange:</strong> Sweep range in octaves (0<...<10). Default = 0. <br><br> <strong>fFreq:</strong> Base frequency of sweep range (0<...1000). Default = 0. |
 | autoWah: | [fDryMix, fWetMix, fFeedback, fRate, fRange, fFreq] | *Same as phaser*|
 | compressor: | [fGain, fThreshold, fRatio, fAttack, fRelease] | <strong>fGain:</strong> Output gain in dB of signal after compression, in the range from -60 to 60. The default value is 5 dB. <br><br> <strong>fThreshold:</strong> Point in dB at which compression begins, in decibels, in the range from -60 to 0. The default value is -15 dB. <br><br> <strong>fRatio:</strong> Compression ratio, in the range from 1 to 100. The default value is 3, which means 3:1 compression. <br><br> <strong>fAttack:</strong> Time in ms before compression reaches its full value, in the range from 0.01 to 500. The default value is 20 ms. <br><br> <strong>fRelease:</strong> Time (speed) in ms at which compression is stopped after input drops below fThreshold, in the range from 50 to 3000. The default value is 200 ms. |
+
+
+### Resources
+
+- [Un4seen](https://www.un4seen.com/)
+- [BassFX Effects](http://www.bass.radio42.com/help/html/7dca7f83-81b6-6232-ded4-8d68e46fb8f1.htm)
