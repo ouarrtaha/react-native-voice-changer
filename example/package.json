@@ -28,7 +28,7 @@
     "react-native-screens": "^2.2.0",
     "react-native-sound": "^0.10.12",
     "react-native-vector-icons": "^6.5.0",
-    "react-native-voice-changer": "git+https://github.com/ouarrtaha/react-native-voice-changer.git"
+    "react-native-voice-changer": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",
