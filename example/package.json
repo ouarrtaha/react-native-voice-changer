@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint ."
@@ -28,7 +27,7 @@
     "react-native-screens": "^2.2.0",
     "react-native-sound": "^0.10.12",
     "react-native-vector-icons": "^6.5.0",
-    "react-native-voice-changer": "^1.0.1"
+    "react-native-voice-changer": "^1.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",
