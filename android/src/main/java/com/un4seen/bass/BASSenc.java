@@ -1,6 +1,6 @@
 /*
 	BASSenc 2.4 Java class
-	Copyright (c) 2003-2016 Un4seen Developments Ltd.
+	Copyright (c) 2003-2020 Un4seen Developments Ltd.
 
 	See the BASSENC.CHM file for more detailed documentation
 */
@@ -9,11 +9,11 @@ package com.un4seen.bass;
 
 import java.nio.ByteBuffer;
 
-@SuppressWarnings("ALL")
 public class BASSenc
 {
 	// Additional error codes returned by BASS_ErrorGetCode
 	public static final int BASS_ERROR_CAST_DENIED = 2100;	// access denied (invalid password)
+	public static final int BASS_ERROR_SERVER_CERT = 2101;	// missing/invalid certificate
 
 	// Additional BASS_SetConfig options
 	public static final int BASS_CONFIG_ENCODE_PRIORITY = 0x10300;
@@ -22,6 +22,9 @@ public class BASSenc
 
 	// Additional BASS_SetConfigPtr options
 	public static final int BASS_CONFIG_ENCODE_CAST_PROXY = 0x10311;
+	public static final int BASS_CONFIG_ENCODE_CAST_BIND = 0x10312;
+	public static final int BASS_CONFIG_ENCODE_SERVER_CERT = 0x10320;
+	public static final int BASS_CONFIG_ENCODE_SERVER_KEY = 0x10321;
 
 	// BASS_Encode_Start flags
 	public static final int BASS_ENCODE_NOHEAD = 1;		// don't send a WAV header to the encoder
@@ -49,10 +52,11 @@ public class BASSenc
 	public static final int BASS_ENCODE_COUNT_QUEUE = 3;	// queued
 	public static final int BASS_ENCODE_COUNT_QUEUE_LIMIT = 4;	// queue limit
 	public static final int BASS_ENCODE_COUNT_QUEUE_FAIL = 5;	// failed to queue
+	public static final int BASS_ENCODE_COUNT_IN_FP = 6;	// sent to encoder before floating-point conversion
 
 	// BASS_Encode_CastInit content MIME types
 	public static final String BASS_ENCODE_TYPE_MP3 = "audio/mpeg";
-	public static final String BASS_ENCODE_TYPE_OGG = "application/ogg";
+	public static final String BASS_ENCODE_TYPE_OGG = "audio/ogg";
 	public static final String BASS_ENCODE_TYPE_AAC = "audio/aacp";
 
 	// BASS_Encode_CastGetStats types
@@ -68,7 +72,19 @@ public class BASSenc
 		channel: The channel handle
 		buffer : Buffer containing the encoded data
 		length : Number of bytes
-		user   : The 'user' parameter value given when calling BASS_Encode_Start */
+		user   : The 'user' parameter value given when starting the encoder */
+	}
+
+	public interface ENCODEPROCEX
+	{
+		void ENCODEPROCEX(int handle, int channel, ByteBuffer buffer, int length, long offset, Object user);
+		/* Encoding callback function.
+		handle : The encoder
+		channel: The channel handle
+		buffer : Buffer containing the encoded data
+		length : Number of bytes
+		offset : File offset of the data
+		user   : The 'user' parameter value given when starting the encoder */
 	}
 
 	public interface ENCODERPROC
@@ -86,7 +102,7 @@ public class BASSenc
 
 	public interface ENCODECLIENTPROC
 	{
-		boolean ENCODECLIENTPROC(int handle, boolean connect, String client, String headers, Object user);
+		boolean ENCODECLIENTPROC(int handle, boolean connect, String client, StringBuffer headers, Object user);
 		/* Client connection notification callback function.
 		handle : The encoder
 		connect: true/false=client is connecting/disconnecting
@@ -108,6 +124,7 @@ public class BASSenc
 	// Encoder notifications
 	public static final int BASS_ENCODE_NOTIFY_ENCODER = 1;	// encoder died
 	public static final int BASS_ENCODE_NOTIFY_CAST = 2;	// cast server connection died
+	public static final int BASS_ENCODE_NOTIFY_SERVER = 3;	// server died
 	public static final int BASS_ENCODE_NOTIFY_CAST_TIMEOUT = 0x10000; // cast timeout
 	public static final int BASS_ENCODE_NOTIFY_QUEUE_FULL = 0x10001;	// queue is out of space
 	public static final int BASS_ENCODE_NOTIFY_FREE = 0x10002;	// encoder has been freed
@@ -115,6 +132,7 @@ public class BASSenc
 	// BASS_Encode_ServerInit flags
 	public static final int BASS_ENCODE_SERVER_NOHTTP = 1;	// no HTTP headers
 	public static final int BASS_ENCODE_SERVER_META = 2;	// Shoutcast metadata
+	public static final int BASS_ENCODE_SERVER_SSL = 4;
 
 	public static native int BASS_Encode_GetVersion();
 
@@ -131,6 +149,7 @@ public class BASSenc
 	public static native long BASS_Encode_GetCount(int handle, int count);
 	public static native boolean BASS_Encode_SetChannel(int handle, int channel);
 	public static native int BASS_Encode_GetChannel(int handle);
+	public static native boolean BASS_Encode_UserOutput(int handle, long offset, ByteBuffer buffer, int length);
 
 	public static native boolean BASS_Encode_CastInit(int handle, String server, String pass, String content, String name, String url, String genre, String desc, String headers, int bitrate, boolean pub);
 	public static native boolean BASS_Encode_CastSetTitle(int handle, String title, String url);

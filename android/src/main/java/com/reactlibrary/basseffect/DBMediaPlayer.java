@@ -821,7 +821,9 @@ public class DBMediaPlayer implements IDBMediaConstants {
         if (mChanPlay != 0) {
             int srcChan = BASS_FX.BASS_FX_TempoGetSource(mChanPlay);
             float dir = 0.0f;
-            BASS.BASS_ChannelGetAttribute(srcChan, BASS_FX.BASS_ATTRIB_REVERSE_DIR, dir);
+            BASS.FloatValue floatValue = new BASS.FloatValue();
+            floatValue.value = dir;
+            BASS.BASS_ChannelGetAttribute(srcChan, BASS_FX.BASS_ATTRIB_REVERSE_DIR, floatValue);
             if (b) {
                 BASS.BASS_ChannelSetAttribute(srcChan, BASS_FX.BASS_ATTRIB_REVERSE_DIR, BASS_FX.BASS_FX_RVS_REVERSE);
             } else {
